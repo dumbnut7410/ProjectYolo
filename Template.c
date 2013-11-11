@@ -129,12 +129,71 @@ void QG(float xC, float yC, float zC){
 * @author
 */
 
+/**
+* Sets the values of a given array 
+* @param Float to shove values into
+* @param Value to shove into index[0]
+* @param Value to shove into index[1]
+* @param Value to shove into index[2]
+* @author jim
+*/
+void setValues (float array[3], float a, float b, float c){
+	array[0] = a;
+	array[1] = b;
+	array[2] = c;
+
+}
+
+/**
+* Determines if a point is close to another point
+*
+* @param target[3] first point for comparison
+* @param object[3] second point for comparison
+* @param distance between the objects to be considered "close"
+* @return true if the two objects are within a certain distance false otherwise
+* @author jim
+*/
+
+bool isClose(float target[3], float object[3], float distance) {
+	
+	float xDist = object[0] - target[0],
+		yDist = object[1] - target[1],
+		zDist = object[2] - target[2];
+	if(absoluteValue(xDist*xDist	+ yDist*yDist + zDist*zDist) <= (distance*distance)){
+		
+		return true;
+	}
+	
+	return false;
+}
+
+/**
+* Determines if a value on an axis is close to another
+*
+* @param target first point for comparison
+* @param object second point for comparison
+* @param distance between the objects to be considered "close"
+* @return true if the two values are within a certain distance false otherwise
+* @author jim
+*/
+
+
+bool isClose(float target, float object, float distance) {
+	
+	if (absoluteValue(target - object) < distance){
+		return true;
+	} else {
+		return false;
+	}
+	
+}
+
 void init(){
 
-timeElapsed = 0;
-nullList[0] = 0;
-nullList[1] = 0;
-nullList[2] = 0;
+	timeElapsed = 0;
+	nullList[0] = 0;
+	nullList[1] = 0;
+	nullList[2] = 0;
 
 }
 
