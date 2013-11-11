@@ -1,3 +1,4 @@
+//Testing
 float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3];
 int timeElapsed;
 bool iAmRed;
