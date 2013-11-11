@@ -7,6 +7,7 @@ nullList[0] = 0;
 nullList[1] = 0;
 nullList[2] = 0;
 }
+//asdasda
 float aV(float number){
 	if(number < 0)	{
 		number = -number;
