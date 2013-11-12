@@ -6,7 +6,7 @@
 //variables
 float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3];
 int timeElapsed;
-bool iAmRed;
+int sphereColor; //1 for blue -1 for red
 
 /*
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,14 +32,36 @@ float aV(float number){
 *This function determines what color you are by setting the iAmRed variable
 *@author chrisHuaman
 */
-void whatColor(){	
-	
-	api.getMyZRState( myZRState );
-	if(timeElapsed == 0){
-		//If x is > 0 then you are blue, set iAmRed to false
-		if(myZRState[0]/*x coord*/ > 0 ){iAmRed = false;}//ur blue
-		else{iAmRed = true;}
-	}	
+
+/**
+* @depreciated setSphere is replacement
+*/
+
+// void whatColor(){	
+// 
+// api.getMyZRState( myZRState );
+// if(timeElapsed == 0){
+// 	//If x is > 0 then you are blue, set iAmRed to false
+// 	if(myZRState[0]/*x coord*/ > 0 ){iAmRed = false;}//ur blue
+// 	else{iAmRed = true;}
+// }	
+// 
+
+
+
+/**
+* This function sets the sphereColor variable
+* @param myState current position of robot
+* @author jim
+*/
+
+int setSphere(ZRState myState){
+	//if is red
+	if (myState[0] < 0) {
+		return -1; //red
+	} else {
+		return 1; //blue
+	}
 }
 
 /**
@@ -159,7 +181,7 @@ bool isClose(float target[3], float object[3], float distance) {
 	float xDist = object[0] - target[0],
 		yDist = object[1] - target[1],
 		zDist = object[2] - target[2];
-	if(absoluteValue(xDist*xDist	+ yDist*yDist + zDist*zDist) <= (distance*distance)){
+	if(aV(xDist*xDist	+ yDist*yDist + zDist*zDist) <= (distance*distance)){
 		
 		return true;
 	}
@@ -180,7 +202,7 @@ bool isClose(float target[3], float object[3], float distance) {
 
 bool isClose(float target, float object, float distance) {
 	
-	if (absoluteValue(target - object) < distance){
+	if (aV(target - object) < distance){
 		return true;
 	} else {
 		return false;
@@ -204,7 +226,7 @@ void init(){
 void loop(){
 
 	getInfo();
-	whatColor();
+	setSphere(myZRState);
 	/*Code vvvv  */
 	
 	
