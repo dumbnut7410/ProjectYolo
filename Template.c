@@ -19,7 +19,7 @@ bool iAmRed;
 *This function calculates the absolute value of a given number
 *@param number This is the number to be absolute-valued
 *@return The distance from zero that the parameter is
-*@author 
+*@author davidLi
 */
 float aV(float number){
 	if(number < 0)	{
@@ -30,7 +30,7 @@ float aV(float number){
 
 /**
 *This function determines what color you are by setting the iAmRed variable
-*@author
+*@author chrisHuaman
 */
 void whatColor(){	
 	
@@ -46,7 +46,7 @@ void whatColor(){
 * This function determines whether or not you are in peril of being kicked out of bounds
 * @param zeroForYourselfoneForOther Who you are testing for in peril
 * @return True if you are in peril, false if you are not
-* @author
+* @author davidLi
 */
 
 bool inPeril(int zeroForYourselfoneForOther){
@@ -68,7 +68,7 @@ return (aV(test[0]) > .48) || (aV(test[1]) > .64) || (aV(test[2]) > .48);
 
 /**
 * This function takes you out of bounds when pushed
-* @author
+* @author davidLi
 */
 
 void gOOOOB() //get out of out of bounds
@@ -87,7 +87,7 @@ void gOOOOB() //get out of out of bounds
 
 /**
 * Collects essential information 
-* @author
+* @author davidlLi
 */
 
 void getInfo(){
@@ -106,7 +106,7 @@ void getInfo(){
 * @param xC x coordinate to travel to 
 * @param yC y coordinate to travel to 
 * @param zC z coordinate to travel to 
-* @author
+* @author davidLi
 */
 void QG(float xC, float yC, float zC){
 
