@@ -34,7 +34,7 @@ float aV(float number){
 */
 
 /**
-* @depreciated setSphere is replacement
+* @deprecated setSphere is replacement
 */
 
 // void whatColor(){	
