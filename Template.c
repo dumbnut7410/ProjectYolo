@@ -4,7 +4,15 @@
 
 
 //variables
-float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3];
+float myPos[3], // {x, y, z} coordinates of our robot
+	otherPos[3], // {x, y, z} coordinates of their robot
+	nullList[3], //{0, 0, 0}
+	positionOther[12], //ZRState of opponent
+	positionOurs[12],  //ZRState of us
+	myVel[3], //Vector for velocity
+	otherVel[3]; //Opponent's velocity vector
+
+
 int timeElapsed;
 int sphereColor; //1 for blue -1 for red
 
@@ -114,12 +122,13 @@ void gOOOOB() //get out of out of bounds
 
 void getInfo(){
 
- api.getOtherZRState(positionOther);
- api.getMyZRState(positionOurs);
- myPos[0] = positionOurs[0]; myPos[1] = positionOurs[1]; myPos[2] = positionOurs[2];
- myVel[0] = positionOurs[3]; myVel[1] = positionOurs[4]; myVel[2] = positionOurs[5];
- otherPos[0] = positionOther[0]; otherPos[1] = positionOther[1]; otherPos[2] = positionOther[2];
- otherVel[0] = positionOther[3]; otherVel[1] = positionOther[4]; otherVel[2] = positionOther[5];
+	 api.getOtherZRState(positionOther);
+	 api.getMyZRState(positionOurs);
+
+	 myPos[0] = positionOurs[0]; myPos[1] = positionOurs[1]; myPos[2] = positionOurs[2];
+	 myVel[0] = positionOurs[3]; myVel[1] = positionOurs[4]; myVel[2] = positionOurs[5];
+	 otherPos[0] = positionOther[0]; otherPos[1] = positionOther[1]; otherPos[2] = positionOther[2];
+	 otherVel[0] = positionOther[3]; otherVel[1] = positionOther[4]; otherVel[2] = positionOther[5];
 
 }
 
@@ -165,6 +174,25 @@ void setValues (float array[3], float a, float b, float c){
 	array[2] = c;
 
 }
+
+/**
+
+This function returns the distance between two points in space
+@param object1[3] First object for comparison
+@param object2[3] Second object for comparison
+@return Distance between the two objects
+
+*/
+
+float getDistBetween(float object1[3], float object2[3]){
+	float xDist = aV(object1[0] - object2[0]), //just x distance
+		yDist = aV(object1[1] - object2[1]), //just y distance
+		zDist = aV(object1[2] - object2[2]); //just z distance
+
+		float distance = ((xDist * xDist)(yDist * yDist)(zDist * zDist)); //needs to be square-rooted
+		return api.mathSquare(distance);
+}
+
 
 /**
 * Determines if a point is close to another point
@@ -226,7 +254,7 @@ void init(){
 void loop(){
 
 	getInfo();
-	setSphere(myZRState);
+	setSphere(positionOurs);
 	/*Code vvvv  */
 	
 	
