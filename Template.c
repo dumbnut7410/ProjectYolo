@@ -4,7 +4,7 @@
 
 
 //variables
-float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3];
+float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3], loc[3]; //locAO and AT store previous locs
 int timeElapsed, whichMap /*tells which map you are [1~4] and technically sometimes 0*/;
 int sphereColor; //1 for blue -1 for red
 
@@ -130,19 +130,26 @@ void getInfo(){
 * @param zC z coordinate to travel to 
 * @author davidLi
 */
-void QG(float xC, float yC, float zC){
+void QG(float xC, float yC, float zC, float speed){
 
-        float loc[3], distance;
-        loc[0] = xC;
+        float distance, vel[3];
+        /*loc[0] = xC;
         loc[1] = yC;
-        loc[2] = zC;
+        loc[2] = zC;*/ 
+        setValues(loc, xC, yC, zC);
+        setValues(vel, speed*(xC-myPos[0]),speed*(yC-myPos[1]), speed*(zC-myPos[2])); 
         distance = sqrtf((loc[0] - myPos[0])*(loc[0] - myPos[0])+(loc[1] - myPos[1])*(loc[1] - myPos[1])+(loc[2] - myPos[2])*(loc[2] - myPos[2]));
 
-        if(distance > 0.02){
-                api.setPositionTarget(loc);
+        if(distance > 0.05){
+        api.setPositionTarget(loc);
+        if(speed != 0)
+        {
+            api.setVelocityTarget(vel);
+        }
         }else{
                 DEBUG(("You are hitting f*ing wood! \n"));
         }
+
 }
                 
 
@@ -213,9 +220,7 @@ bool isClose(float target, float object, float distance) {
 void init(){
 
         timeElapsed = 0;
-        nullList[0] = 0;
-        nullList[1] = 0;
-        nullList[2] = 0;
+        setValues(nullList, 0,0,0);
 				//Author == David Li
 				float dFoZ[3], dFoT[3]; //Debris field of Zero and Two, respectively.
 				game.getDebrisLocation(0, dFoZ);
@@ -244,7 +249,7 @@ DEBUG(("%i", whichMap)); //!<warning!> This code will be pulled soon. -David
         /*Code vvvv  */
         
         
-    QG(0,0,0);
+    QG(0,0,0,1);
     
     /*Syntacies ~ and ~ functions:
     DON'T TOUCH ANYTHING IN VOID LOOP THAT IS OUTSIDE CODE!
