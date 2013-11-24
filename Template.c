@@ -6,7 +6,8 @@
 //variables
 float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3], loc[3]; //locAO and AT store previous locs
 int timeElapsed, whichMap /*tells which map you are [1~4] and technically sometimes 0*/;
-int sphereColor; //1 for blue -1 for red
+int sphereColor; 
+int goal, lasttime;//1 for blue -1 for red
 
 /*
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -83,8 +84,13 @@ else{
                 test[1] = otherPos[1];
                 test[2] = otherPos[2];
         }
-        
-return (aV(test[0]) > .48) || (aV(test[1]) > .64) || (aV(test[2]) > .48);
+        if(goal == 3)
+				{
+				return (aV(test[0]) > .48) || (aV(test[1]) > .64) || (aV(test[2]) > .48);
+				}else{
+				return (aV(test[0]) > .5) || (aV(test[1]) > .65) || (aV(test[2]) > .48);
+				}
+
 }
 
 
@@ -103,7 +109,10 @@ void gOOOOB() //get out of out of bounds
                         targetvelocity[i] = -2*myPos[i];
                 }
                 api.setPositionTarget(nullList);
-                api.setVelocityTarget(targetvelocity);
+                //if(timeElapsed - lasttime >= 4 && goal == 3)
+							//	{
+								api.setVelocityTarget(targetvelocity);
+								//}
         }
 }
 
@@ -130,7 +139,7 @@ void getInfo(){
 * @param zC z coordinate to travel to 
 * @author davidLi
 */
-void QG(float xC, float yC, float zC, float speed){
+bool QG(float xC, float yC, float zC, float speed){
 
         float distance, vel[3];
         /*loc[0] = xC;
@@ -140,14 +149,17 @@ void QG(float xC, float yC, float zC, float speed){
         setValues(vel, speed*(xC-myPos[0]),speed*(yC-myPos[1]), speed*(zC-myPos[2])); 
         distance = sqrtf((loc[0] - myPos[0])*(loc[0] - myPos[0])+(loc[1] - myPos[1])*(loc[1] - myPos[1])+(loc[2] - myPos[2])*(loc[2] - myPos[2]));
 
-        if(distance > 0.05){
+        if(distance > 0.05 || (timeElapsed - lasttime) < 3){ 
         api.setPositionTarget(loc);
         if(speed != 0)
         {
             api.setVelocityTarget(vel);
         }
-        }else{
+        return false;
+				}else{
                 DEBUG(("You are hitting f*ing wood! \n"));
+								lasttime = timeElapsed;
+								return true;
         }
 
 }
@@ -235,22 +247,52 @@ void init(){
 						whichMap = i;
 					}
 				}
-
+				goal = 0;
+				lasttime = 0;
 }
 
 /**
 * This function is called once per second
 * Most implementation of functions will go here
 */
+int stableZ()
+{
+	float Vg[3], Pg[3];
+	setValues(Vg, -2*myVel[0], -2*myVel[1], -2*myVel[2]);
+	setValues(Pg, myPos[0] + Vg[0], myPos[1] + Vg[1], myPos[2] + Vg[2]);
+	api.setPositionTarget(Pg); 
+	api.setVelocityTarget(Vg);
+	if(mathVecMagnitude(myVel, 3)<.01)
+		{
+			return 1;
+		}else{
+			return 0;
+		}
+}
 void loop(){
-DEBUG(("%i", whichMap)); //!<warning!> This code will be pulled soon. -David
+DEBUG(("%i", goal)); //!<warning!> This code will be pulled soon. -David
         getInfo();
         setSphere(myZRState);
         /*Code vvvv  */
-        
-        
-    QG(0,0,0,1);
-    
+//float p[3][3] =  {{.25,-.25,.2},{.5,.25,.15},{.5,.65,0}}; #3
+//float p[3][3] =  {{0,0,-.2},{.25,.25,-.2},{.5,.65,0}};  #1
+//float p[3][3] =  {{.3,0,-.2},{.5,.65,-.1},{.5,.65,0}}; #2
+     
+float p[3][3] =  {{0,0,-.2},{.25,.25,-.2},{.5,.65,0}};
+        if(QG(p[goal][0], p[goal][1], p[goal][2], 0))
+					 {
+						 goal++;
+					 }
+				if(goal == 4)
+				{
+					float target[3], torque[3];
+					setValues(target , 1,0,0);
+					setValues(torque, 0,0,10);
+					api.setAttitudeTarget(target);
+					api.setTorques(torque);
+				}
+	
+	
     /*Syntacies ~ and ~ functions:
     DON'T TOUCH ANYTHING IN VOID LOOP THAT IS OUTSIDE CODE!
     Your position is myPos[3] Other position is otherPos[3]. 
@@ -266,6 +308,13 @@ DEBUG(("%i", whichMap)); //!<warning!> This code will be pulled soon. -David
         
         
         /*Code ^^^^  */
-        gOOOOB();
+					// if(goal != 3 || timeElapsed - lasttime < 4) 
+					if(goal == 3)
+					{
+						goal = goal + stableZ();
+					}else{
+					gOOOOB();
+					}
         timeElapsed++;
 }
+
