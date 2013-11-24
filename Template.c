@@ -4,8 +4,18 @@
 
 
 //variables
-float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3];
-int timeElapsed;
+float myPos[3], // {x, y, z} coordinates of our robot
+	otherPos[3], // {x, y, z} coordinates of their robot
+	nullList[3], //{0, 0, 0}
+	otherZRState[12], //ZRState of opponent
+	ourZRState[12],  //ZRState of us
+	myVel[3], //Vector for velocity
+	otherVel[3],//Opponent's velocity vector
+	distFromTarget, //used for setPositionSpeed
+	initialDistance; //used for setPositionSpeed
+
+//depricated game.getTime();
+//int timeElapsed;
 int sphereColor; //1 for blue -1 for red
 
 /*
@@ -93,8 +103,8 @@ return (aV(test[0]) > .48) || (aV(test[1]) > .64) || (aV(test[2]) > .48);
 * @author davidLi
 */
 
-void gOOOOB() //get out of out of bounds
-{
+void gOOOOB(){ //get out of out of bounds
+
 	float targetvelocity[3];
 	
 	if(inPeril(0)){
@@ -114,12 +124,19 @@ void gOOOOB() //get out of out of bounds
 
 void getInfo(){
 
- api.getOtherZRState(positionOther);
- api.getMyZRState(positionOurs);
- myPos[0] = positionOurs[0]; myPos[1] = positionOurs[1]; myPos[2] = positionOurs[2];
- myVel[0] = positionOurs[3]; myVel[1] = positionOurs[4]; myVel[2] = positionOurs[5];
- otherPos[0] = positionOther[0]; otherPos[1] = positionOther[1]; otherPos[2] = positionOther[2];
- otherVel[0] = positionOther[3]; otherVel[1] = positionOther[4]; otherVel[2] = positionOther[5];
+	 api.getOtherZRState(otherZRState);
+	 api.getMyZRState(ourZRState);
+
+	 myPos[0] = ourZRState[0];
+	 myPos[1] = ourZRState[1]; 
+	 myPos[2] = ourZRState[2];
+	 myVel[0] = ourZRState[3]; 
+	 myVel[1] = ourZRState[4]; 
+	 myVel[2] = ourZRState[5];
+	 
+	 otherPos[0] = otherZRState[0]; otherPos[1] = otherZRState[1]; otherPos[2] = otherZRState[2];
+	 otherVel[0] = otherZRState[3]; otherVel[1] = otherZRState[4]; otherVel[2] = otherZRState[5];
+
 
 }
 
@@ -167,6 +184,28 @@ void setValues (float array[3], float a, float b, float c){
 }
 
 /**
+
+This function returns the distance between two points in space
+@param object1[3] First object for comparison
+@param object2[3] Second object for comparison
+@return Distance between the two objects
+
+*/
+
+float getDistBetween(float object1[3], float object2[3]){
+	
+	float xDist = fabsf(object1[0] - object2[0]), //just x distance
+		yDist = fabsf(object1[1] - object2[1]), //just y distance
+		zDist = fabsf(object1[2] - object2[2]); //just z distance
+
+		float distance = (mathSquare(xDist)+mathSquare(yDist)+mathSquare(zDist)); //needs to be square-rooted
+
+		
+		return sqrtf(distance);
+}
+
+
+/**
 * Determines if a point is close to another point
 *
 * @param target[3] first point for comparison
@@ -210,13 +249,62 @@ bool isClose(float target, float object, float distance) {
 	
 }
 
+
+/**
+*This function acts as an api.setPositionTarget() but has a speed parameter
+*@param targetPos[3] Position desired to go to
+*@param speed length of the vector that you wish to go to
+*
+*/
+void setPositionSpeed(float targetPos[3], float speed){
+	
+	
+
+	float speedXDist = targetPos[0] - myPos[0],
+		speedYDist = targetPos[1] - myPos[1],
+		speedZDist = targetPos[2] - myPos[2]; //gathers components of distance
+
+	if(initialDistance == -69.0f){
+		initialDistance = getDistBetween(myPos, targetPos);
+
+		
+	}
+
+	float directionVector[] = {speedXDist, speedYDist, speedZDist};
+	float negativeDirectionVector[] = {-speedXDist, -speedYDist, -speedZDist};
+
+	mathVecNormalize(directionVector, speed);
+
+	
+	
+	if(isClose(targetPos, myPos, .1f)){
+		
+		api.setPositionTarget(targetPos);
+
+	} else if(getDistBetween(myPos, targetPos) < initialDistance/2){
+
+		api.setVelocityTarget(negativeDirectionVector);
+		
+	}
+
+	 else{
+		api.setVelocityTarget(directionVector);
+		
+	}
+	
+
+
+}
+
+
+
 void init(){
 
-	timeElapsed = 0;
 	nullList[0] = 0;
 	nullList[1] = 0;
 	nullList[2] = 0;
 
+	initialDistance = -69.0f;
 }
 
 /**
@@ -226,27 +314,9 @@ void init(){
 void loop(){
 
 	getInfo();
-	setSphere(myZRState);
+	setSphere(ourZRState);
 	/*Code vvvv  */
-	
-	
-    QG(0,0,0);
-    
-    /*Syntacies ~ and ~ functions:
-    DON'T TOUCH ANYTHING IN VOID LOOP THAT IS OUTSIDE CODE!
-    Your position is myPos[3] Other position is otherPos[3]. 
-	Your velocity is myVel[3] Other velocity is otherVel[3]
-	iAmRed tells you if you are red.True if red, else false
-	QG(float x, float y, float z) is a convenient function
-    that goes to a location without needing to store a list
-    aV() is absolute value function; timeElapsed is time elapsed
-    No need to avoid out of bounds; already have gOOOOB()
-	*/
-	
-	
-	
-	
-	/*Code ^^^^  */
-	gOOOOB();
-	timeElapsed++;
+
+
+	setPositionSpeed(nullList, .02f);
 }
