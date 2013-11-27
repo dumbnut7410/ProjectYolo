@@ -4,9 +4,26 @@
 
 
 //variables
-float myZRState[12], myPos[3], otherPos[3], nullList[3],positionOther[12], positionOurs[12], myVel[3], otherVel[3], loc[3]; //locAO and AT store previous locs
-int timeElapsed, whichMap /*tells which map you are [1~4] and technically sometimes 0*/;
+
+float myPos[3], // {x, y, z} coordinates of our robot
+	otherPos[3], // {x, y, z} coordinates of their robot
+	nullList[3], //{0, 0, 0}
+	otherZRState[12], //ZRState of opponent
+	ourZRState[12],  //ZRState of us
+	myVel[3], //Vector for velocity
+	otherVel[3],//Opponent's velocity vector
+	distFromTarget, //used for setPositionSpeed
+	initialDistance; //used for setPositionSpeed
+
+//depricated game.getTime();
+//int timeElapsed;
 int sphereColor; //1 for blue -1 for red
+
+
+int timeElapsed, whichMap /*tells which map you are [1~4] and technically sometimes 0*/;
+
+int goal, lasttime;//1 for blue -1 for red
+
 
 /*
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -22,10 +39,10 @@ int sphereColor; //1 for blue -1 for red
 *@author davidLi
 */
 float aV(float number){
-        if(number < 0)        {
-                number = -number;
-        }
-        return number;
+	if(number < 0)	{
+		number = -number;
+	}
+	return number;
 } 
 
 /**
@@ -37,14 +54,14 @@ float aV(float number){
 * @deprecated setSphere is replacement
 */
 
-// void whatColor(){        
+// void whatColor(){	
 // 
 // api.getMyZRState( myZRState );
 // if(timeElapsed == 0){
-//         //If x is > 0 then you are blue, set iAmRed to false
-//         if(myZRState[0]/*x coord*/ > 0 ){iAmRed = false;}//ur blue
-//         else{iAmRed = true;}
-// }        
+// 	//If x is > 0 then you are blue, set iAmRed to false
+// 	if(myZRState[0]/*x coord*/ > 0 ){iAmRed = false;}//ur blue
+// 	else{iAmRed = true;}
+// }	
 // 
 
 
@@ -56,12 +73,12 @@ float aV(float number){
 */
 
 int setSphere(ZRState myState){
-        //if is red
-        if (myState[0] < 0) {
-                return -1; //red
-        } else {
-                return 1; //blue
-        }
+	//if is red
+	if (myState[0] < 0) {
+		return -1; //red
+	} else {
+		return 1; //blue
+	}
 }
 
 /**
@@ -72,18 +89,18 @@ int setSphere(ZRState myState){
 */
 
 bool inPeril(int zeroForYourselfoneForOther){
-        float test[3];
-        if(zeroForYourselfoneForOther == 0)        {
-                test[0] = myPos[0];
-                test[1] = myPos[1];
-                test[2] = myPos[2];
-        }
+	float test[3];
+	if(zeroForYourselfoneForOther == 0)	{
+		test[0] = myPos[0];
+		test[1] = myPos[1];
+		test[2] = myPos[2];
+	}
 else{
-                test[0] = otherPos[0];
-                test[1] = otherPos[1];
-                test[2] = otherPos[2];
-        }
-        
+		test[0] = otherPos[0];
+		test[1] = otherPos[1];
+		test[2] = otherPos[2];
+	}
+	
 return (aV(test[0]) > .48) || (aV(test[1]) > .64) || (aV(test[2]) > .48);
 }
 
@@ -91,10 +108,7 @@ return (aV(test[0]) > .48) || (aV(test[1]) > .64) || (aV(test[2]) > .48);
 /**
 * This function takes you out of bounds when pushed
 * @author davidLi
-*/
-
-void gOOOOB() //get out of out of bounds
-{
+*/void gOOOOB(){  //get out of out of bounds
         float targetvelocity[3];
         
         if(inPeril(0)){
@@ -103,8 +117,12 @@ void gOOOOB() //get out of out of bounds
                         targetvelocity[i] = -2*myPos[i];
                 }
                 api.setPositionTarget(nullList);
-                api.setVelocityTarget(targetvelocity);
+                if(timeElapsed - lasttime >= 3 && goal == 3)
+								{
+								api.setVelocityTarget(targetvelocity);
+								}
         }
+
 }
 
 /**
@@ -114,12 +132,19 @@ void gOOOOB() //get out of out of bounds
 
 void getInfo(){
 
- api.getOtherZRState(positionOther);
- api.getMyZRState(positionOurs);
- myPos[0] = positionOurs[0]; myPos[1] = positionOurs[1]; myPos[2] = positionOurs[2];
- myVel[0] = positionOurs[3]; myVel[1] = positionOurs[4]; myVel[2] = positionOurs[5];
- otherPos[0] = positionOther[0]; otherPos[1] = positionOther[1]; otherPos[2] = positionOther[2];
- otherVel[0] = positionOther[3]; otherVel[1] = positionOther[4]; otherVel[2] = positionOther[5];
+	 api.getOtherZRState(otherZRState);
+	 api.getMyZRState(ourZRState);
+
+	 myPos[0] = ourZRState[0];
+	 myPos[1] = ourZRState[1]; 
+	 myPos[2] = ourZRState[2];
+	 myVel[0] = ourZRState[3]; 
+	 myVel[1] = ourZRState[4]; 
+	 myVel[2] = ourZRState[5];
+	 
+	 otherPos[0] = otherZRState[0]; otherPos[1] = otherZRState[1]; otherPos[2] = otherZRState[2];
+	 otherVel[0] = otherZRState[3]; otherVel[1] = otherZRState[4]; otherVel[2] = otherZRState[5];
+
 
 }
 
@@ -130,28 +155,23 @@ void getInfo(){
 * @param zC z coordinate to travel to 
 * @author davidLi
 */
-void QG(float xC, float yC, float zC, float speed){
 
-        float distance, vel[3];
-        /*loc[0] = xC;
-        loc[1] = yC;
-        loc[2] = zC;*/ 
-        setValues(loc, xC, yC, zC);
-        setValues(vel, speed*(xC-myPos[0]),speed*(yC-myPos[1]), speed*(zC-myPos[2])); 
-        distance = sqrtf((loc[0] - myPos[0])*(loc[0] - myPos[0])+(loc[1] - myPos[1])*(loc[1] - myPos[1])+(loc[2] - myPos[2])*(loc[2] - myPos[2]));
+void QG(float xC, float yC, float zC){
 
-        if(distance > 0.05){
-        api.setPositionTarget(loc);
-        if(speed != 0)
-        {
-            api.setVelocityTarget(vel);
-        }
-        }else{
-                DEBUG(("You are hitting f*ing wood! \n"));
-        }
+	float loc[3], distance;
+	loc[0] = xC;
+	loc[1] = yC;
+	loc[2] = zC;
+	distance = sqrtf((loc[0] - myPos[0])*(loc[0] - myPos[0])+(loc[1] - myPos[1])*(loc[1] - myPos[1])+(loc[2] - myPos[2])*(loc[2] - myPos[2]));
 
+	if(distance > 0.02){
+		api.setPositionTarget(loc);
+	}else{
+		DEBUG(("You are hitting f*ing wood! \n"));
+	}
 }
-                
+
+		
 
 /**
 *This function is called once at the beginning of the simulation
@@ -167,11 +187,33 @@ void QG(float xC, float yC, float zC, float speed){
 * @author jim
 */
 void setValues (float array[3], float a, float b, float c){
-        array[0] = a;
-        array[1] = b;
-        array[2] = c;
+	array[0] = a;
+	array[1] = b;
+	array[2] = c;
 
 }
+
+/**
+
+This function returns the distance between two points in space
+@param object1[3] First object for comparison
+@param object2[3] Second object for comparison
+@return Distance between the two objects
+
+*/
+
+float getDistBetween(float object1[3], float object2[3]){
+	
+	float xDist = fabsf(object1[0] - object2[0]), //just x distance
+		yDist = fabsf(object1[1] - object2[1]), //just y distance
+		zDist = fabsf(object1[2] - object2[2]); //just z distance
+
+		float distance = (mathSquare(xDist)+mathSquare(yDist)+mathSquare(zDist)); //needs to be square-rooted
+
+		
+		return sqrtf(distance);
+}
+
 
 /**
 * Determines if a point is close to another point
@@ -184,16 +226,16 @@ void setValues (float array[3], float a, float b, float c){
 */
 
 bool isClose(float target[3], float object[3], float distance) {
-        
-        float xDist = object[0] - target[0],
-                yDist = object[1] - target[1],
-                zDist = object[2] - target[2];
-        if(aV(xDist*xDist        + yDist*yDist + zDist*zDist) <= (distance*distance)){
-                
-                return true;
-        }
-        
-        return false;
+	
+	float xDist = object[0] - target[0],
+		yDist = object[1] - target[1],
+		zDist = object[2] - target[2];
+	if(aV(xDist*xDist	+ yDist*yDist + zDist*zDist) <= (distance*distance)){
+		
+		return true;
+	}
+	
+	return false;
 }
 
 /**
@@ -208,64 +250,107 @@ bool isClose(float target[3], float object[3], float distance) {
 
 
 bool isClose(float target, float object, float distance) {
-        
-        if (aV(target - object) < distance){
-                return true;
-        } else {
-                return false;
-        }
-        
+	
+	if (aV(target - object) < distance){
+		return true;
+	} else {
+		return false;
+	}
+	
 }
+
+
+/**
+*This function acts as an api.setPositionTarget() but has a speed parameter
+*@param targetPos[3] Position desired to go to
+*@param speed length of the vector that you wish to go to
+*
+*/
+void setPositionSpeed(float targetPos[3], float speed){
+	
+	
+
+	float speedXDist = targetPos[0] - myPos[0],
+		speedYDist = targetPos[1] - myPos[1],
+		speedZDist = targetPos[2] - myPos[2]; //gathers components of distance
+
+	if(initialDistance == -69.0f){
+		initialDistance = getDistBetween(myPos, targetPos);
+
+		
+	}
+
+	float directionVector[] = {speedXDist, speedYDist, speedZDist};
+	float negativeDirectionVector[] = {-speedXDist, -speedYDist, -speedZDist};
+
+	mathVecNormalize(directionVector, speed);
+	mathVecNormalize(negativeDirectionVector, speed);
+
+	
+	
+	if(isClose(targetPos, myPos, .15f)){
+		
+		api.setPositionTarget(targetPos);
+
+	} else if(getDistBetween(myPos, targetPos) < initialDistance/2){
+
+		api.setVelocityTarget(negativeDirectionVector);
+		
+	}
+
+	 else{
+		api.setVelocityTarget(directionVector);
+		
+	}
+	
+
+
+}
+
+
 
 void init(){
 
-        timeElapsed = 0;
-        setValues(nullList, 0,0,0);
-				//Author == David Li
-				float dFoZ[3], dFoT[3]; //Debris field of Zero and Two, respectively.
-				game.getDebrisLocation(0, dFoZ);
-				game.getDebrisLocation(2, dFoT);
-				whichMap = -1; //Default value if not found in database.
-				float dbZ[3][5] = {{0.3,0.35,0.1,0.45,0.25},{-0.3,-0.35,-0.4,-0.35,-0.4},{0.1,0.05,0.4,0.1,0.1}};
-				float dbT[3][5] = {{0.1,0.1,0.25,0.25,0.35},{-0.3,-0.35,-0.25,-0.3,-0.35},{-0.4,-0.4,0.15,-0.4,-0.3}};
-				for(int i = 0; i<=4; ++i)
-				{
-					if((dbZ[0][i] == dFoZ[0] && dbZ[1][i] == dFoZ[1] && dbZ[2][i] == dFoZ[2]) && (dbT[0][i] == dFoT[0] && dbT[1][i] == dFoT[1] && dbT[2][i] == dFoT[2]))
-					{
-						whichMap = i;
-					}
-				}
+
+	nullList[0] = 0;
+	nullList[1] = 0;
+	nullList[2] = 0;
+
+	initialDistance = -69.0f;
+
+    timeElapsed = 0;
+    setValues(nullList, 0,0,0);
+	//Author == David Li
+	float dFoZ[3], dFoT[3]; //Debris field of Zero and Two, respectively.
+	game.getDebrisLocation(0, dFoZ);
+	game.getDebrisLocation(2, dFoT);
+	whichMap = -1; //Default value if not found in database.
+	float dbZ[3][5] = {{0.3,0.35,0.1,0.45,0.25},{-0.3,-0.35,-0.4,-0.35,-0.4},{0.1,0.05,0.4,0.1,0.1}};
+	float dbT[3][5] = {{0.1,0.1,0.25,0.25,0.35},{-0.3,-0.35,-0.25,-0.3,-0.35},{-0.4,-0.4,0.15,-0.4,-0.3}};
+	for(int i = 0; i<=4; ++i)
+	{
+		if((dbZ[0][i] == dFoZ[0] && dbZ[1][i] == dFoZ[1] && dbZ[2][i] == dFoZ[2]) && (dbT[0][i] == dFoT[0] && dbT[1][i] == dFoT[1] && dbT[2][i] == dFoT[2]))
+		{
+			whichMap = i;
+		}
+	}
+	goal = 0;
+	lasttime = 0;
 
 }
 
 /**
 * This function is called once per second
-* Most implementation of functions will go here
+* Most implementation of functions wForest
+aill go here
 */
 void loop(){
-DEBUG(("%i", whichMap)); //!<warning!> This code will be pulled soon. -David
-        getInfo();
-        setSphere(myZRState);
-        /*Code vvvv  */
-        
-        
-    QG(0,0,0,1);
-    
-    /*Syntacies ~ and ~ functions:
-    DON'T TOUCH ANYTHING IN VOID LOOP THAT IS OUTSIDE CODE!
-    Your position is myPos[3] Other position is otherPos[3]. 
-        Your velocity is myVel[3] Other velocity is otherVel[3]
-        iAmRed tells you if you are red.True if red, else false
-        QG(float x, float y, float z) is a convenient function
-    that goes to a location without needing to store a list
-    aV() is absolute value function; timeElapsed is time elapsed
-    No need to avoid out of bounds; already have gOOOOB()
-        */
-        
-        
-        
-        
-        /*Code ^^^^  */
-        gOOOOB();
-        timeElapsed++;
+
+	getInfo();
+	setSphere(ourZRState);
+	/*Code vvvv  */
+	float laserPos[3] = {.3f,.4f,.2};
+
+	setPositionSpeed(laserPos, .1f);
+
 }
